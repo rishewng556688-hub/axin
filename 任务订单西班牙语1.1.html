@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="UTF-8">
+<title>CPT MARKETS Sistema – Plataforma de Tareas Prepago</title>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #6a0dad, #8a2be2, #dda0dd);
+  color: #ffffff;
+}
+#pageContent {
+  padding: 20px;
+  width: fit-content;
+  margin: auto;
+}
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.top-left-input { display: flex; align-items: center; }
+.top-left-input input { width: 150px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; text-align: center; }
+.top-left-input svg { width: 20px; height: 20px; margin-right: 5px; fill: #ffffff; cursor: pointer; }
+.top-right-time {
+  font-size: 16px; font-weight: bold;
+  background-color: rgba(128,0,128,0.3);
+  padding: 5px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3);
+}
+table { border-collapse: collapse; background-color: rgba(75,0,130,0.3); }
+th, td { border: 1px solid rgba(255,255,255,0.3); padding: 12px; text-align: center; }
+th { background-color: rgba(75,0,130,0.5); }
+tr:nth-child(even) { background-color: rgba(138,43,226,0.1); }
+tr:hover { background-color: rgba(138,43,226,0.2); }
+
+/* ⭐ 智利金额很长，这里加宽所有数字输入框 */
+table input[type="number"],
+table input[type="text"] {
+  width: 140px;
+  padding: 6px;
+  font-size: 15px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+/* ⭐ Valor a retirar 宽度加大 */
+#planTable td:nth-child(6) {
+  min-width: 160px;
+}
+
+/* 按钮 */
+button { padding: 8px 16px; background: linear-gradient(90deg, #6a0dad, #8a2be2); color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; transition: 0.3s; }
+button:hover { background: linear-gradient(90deg, #dda0dd, #8a2be2, #6a0dad); box-shadow: 0 0 15px rgba(138,43,226,0.7); }
+
+.formula { color: #e0b0ff; font-weight: bold; margin: 5px 0; }
+p.note { color: #e0b0ff; margin-top: 10px; text-align: center; }
+
+/* Modal */
+#modal { display: none; position: absolute; background: rgba(75,0,130,0.95); color: #00ffff; font-weight: bold; text-align: center; padding: 12px 15px; border-radius: 10px; border: 2px solid #8a2be2; z-index: 100; min-width: 220px; max-width: 90%; word-wrap: break-word; white-space: pre-wrap; line-height: 1.4em; }
+#modal button { margin-top: 8px; padding: 5px 10px; border: none; border-radius: 5px; background: #8a2be2; color: #ffffff; cursor: pointer; font-size: 14px; }
+
+/* ⭐ Registros 表格金额栏加宽 */
+#recordTable td:nth-child(3),
+#recordTable td:nth-child(4) {
+  min-width: 160px;
+}
+
+/* Registros */
+#records { margin-top: 30px; width: fit-content; }
+#recordSearch { margin-bottom: 10px; }
+#recordSearch input { width: 200px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; }
+#recordSearch button { padding: 5px 10px; margin-left: 5px; }
+
+#recordTable { border-collapse: collapse; width: 100%; }
+#recordTable th, #recordTable td { border: 1px solid rgba(255,255,255,0.3); padding: 8px; text-align: center; }
+#recordTable th { background-color: rgba(75,0,130,0.5); }
+#recordTable tr:nth-child(even) { background-color: rgba(138,43,226,0.1); }
+#recordTable tr:hover { background-color: rgba(138,43,226,0.2); }
+
+#pagination button { margin: 3px; padding: 5px 10px; border-radius: 5px; border: none; cursor: pointer; background-color: #6a0dad; color: white; }
+</style>
+</head>
+<body>
+<div id="pageContent">
+
+<h2 style="text-align:center;">CPT MARKETS Sistema – Plataforma de Tareas Prepago</h2>
+
+<div class="top-bar">
+  <div class="top-left-input">
+    <svg id="screenshotIcon" viewBox="0 0 512 512">
+      <path d="M505 442.7l-99.7-99.7c28.3-34.9 45.3-79.4 45.3-127.3C450.6 99.1 351.5 0 225.3 0S0 99.1 0 225.3 99.1 450.6 225.3 450.6c47.9 0 92.4-17 127.3-45.3l99.7 99.7c4.5 4.5 10.6 7 17 7s12.5-2.5 17-7c9.4-9.4 9.4-24.6 0-34zM225.3 400c-96.1 0-174.7-78.6-174.7-174.7S129.2 50.6 225.3 50.6 400 129.2 400 225.3 321.4 400 225.3 400z"/>
+    </svg>
+    <input type="text" placeholder="Código del pedido" id="topCodeInput">
+  </div>
+  <div class="top-right-time" id="currentTime"></div>
+</div>
+
+<table id="planTable">
+  <thead>
+    <tr><th>Nº</th><th>Opción</th><th>Precio (CLP)</th><th>Comisión (%)</th><th>Comisión (CLP)</th><th>Valor a retirar (CLP)</th><th>Acción</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>Opción 1</td><td><input type="number" value="1350" oninput="updateRow(1)"></td><td><input type="number" value="40" oninput="updateRow(1)"></td><td><input type="text" readonly></td><td id="withdraw1"></td><td><button onclick="selectOption(1)">Seleccionar</button></td></tr>
+    <tr><td colspan="7"><p class="formula" id="formula1"></p></td></tr>
+    <tr><td>2</td><td>Opción 2</td><td><input type="number" value="3900" oninput="updateRow(2)"></td><td><input type="number" value="40" oninput="updateRow(2)"></td><td><input type="text" readonly></td><td id="withdraw2"></td><td><button onclick="selectOption(2)">Seleccionar</button></td></tr>
+    <tr><td colspan="7"><p class="formula" id="formula2"></p></td></tr>
+    <tr><td>3</td><td>Opción 3</td><td><input type="number" value="9860" oninput="updateRow(3)"></td><td><input type="number" value="40" oninput="updateRow(3)"></td><td><input type="text" readonly></td><td id="withdraw3"></td><td><button onclick="selectOption(3)">Seleccionar</button></td></tr>
+    <tr><td colspan="7"><p class="formula" id="formula3"></p></td></tr>
+  </tbody>
+</table>
+
+<p class="note">El sistema devolverá automáticamente el monto principal + comisión en 5 a 10 minutos.</p>
+
+<div id="modal"><p id="modalMessage"></p><button onclick="closeModal()">OK</button></div>
+
+<div id="records">
+  <h3>Registros de Pedidos</h3>
+  <div id="recordSearch">
+    <input type="text" id="searchInput" placeholder="Buscar pedido por código">
+    <button onclick="searchRecords()">Buscar</button>
+    <button onclick="clearSearch()">Limpiar</button>
+  </div>
+  <table id="recordTable">
+    <thead><tr><th>Código</th><th>Opción</th><th>Precio</th><th>Valor a retirar</th><th>Acción</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <div id="pagination"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+let currentRecords=[], currentPage=1, recordsPerPage=3;
+
+function updateRow(id){
+  const priceInput=document.querySelector(`#planTable tbody tr:nth-child(${id*2-1}) td:nth-child(3) input`);
+  const percentInput=document.querySelector(`#planTable tbody tr:nth-child(${id*2-1}) td:nth-child(4) input`);
+  const commissionInput=document.querySelector(`#planTable tbody tr:nth-child(${id*2-1}) td:nth-child(5) input`);
+  const price=parseFloat(priceInput.value)||0;
+  const percent=parseFloat(percentInput.value)||0;
+  const commission=price*percent/100;
+  const withdraw=price+commission;
+  commissionInput.value=Math.round(commission).toLocaleString('es-CL',{style:'currency',currency:'CLP',minimumFractionDigits:0});
+  document.getElementById(`withdraw${id}`).innerText=Math.round(withdraw).toLocaleString('es-CL',{style:'currency',currency:'CLP',minimumFractionDigits:0});
+  document.getElementById(`formula${id}`).innerText=`Precio ${Math.round(price).toLocaleString('es-CL',{style:'currency',currency:'CLP',minimumFractionDigits:0})} + Comisión ${percent}% (${Math.round(commission).toLocaleString('es-CL',{style:'currency',currency:'CLP',minimumFractionDigits:0})}) = Valor a retirar ${Math.round(withdraw).toLocaleString('es-CL',{style:'currency',currency:'CLP',minimumFractionDigits:0})}`;
+  saveData(id, price, percent);
+}
+
+function saveData(id, price, percent){
+  let data=JSON.parse(localStorage.getItem('paymiumData')||'{}');
+  data[id]={price,percent};
+  localStorage.setItem('paymiumData', JSON.stringify(data));
+}
+
+function loadData(){
+  const data=JSON.parse(localStorage.getItem('paymiumData')||'{}');
+  for(let i=1;i<=3;i++){
+    if(data[i]){
+      document.querySelector(`#planTable tbody tr:nth-child(${i*2-1}) td:nth-child(3) input`).value=data[i].price;
+      document.querySelector(`#planTable tbody tr:nth-child(${i*2-1}) td:nth-child(4) input`).value=data[i].percent;
+    }
+    updateRow(i);
+  }
+}
+
+function selectOption(id){
+  const priceInput=document.querySelector(`#planTable tbody tr:nth-child(${id*2-1}) td:nth-child(3) input`);
+  const price=Math.round(parseFloat(priceInput.value)||0);
+  const withdraw=document.getElementById(`withdraw${id}`).innerText;
+  const code=document.getElementById('topCodeInput').value||'Sin código';
+
+  let records=JSON.parse(localStorage.getItem('orderRecords')||'[]');
+  records.unshift({id:Date.now(), code, option:id, price, withdraw});
+  localStorage.setItem('orderRecords', JSON.stringify(records));
+  renderRecords();
+
+  const row=document.querySelector(`#planTable tbody tr:nth-child(${2*2-1})`);
+  const rect=row.getBoundingClientRect();
+  const modal=document.getElementById('modal');
+  document.getElementById('modalMessage').innerText=`Has seleccionado la Opción ${id} (${code})\nPrecio: ${price.toLocaleString('es-CL',{style:'currency',currency:'CLP',minimumFractionDigits:0})}, Valor a retirar: ${withdraw}`;
+  modal.style.display='block';
+  modal.style.top=(rect.top+window.scrollY+rect.height/2-modal.offsetHeight/2)+'px';
+  modal.style.left=(rect.left+window.scrollX+rect.width/2-modal.offsetWidth/2)+'px';
+}
+
+function renderRecords(){
+  currentRecords=JSON.parse(localStorage.getItem('orderRecords')||'[]');
+  currentPage=1;
+  showPage();
+}
+
+function showPage(){
+  const tbody=document.querySelector('#recordTable tbody');
+  tbody.innerHTML='';
+  const start=(currentPage-1)*recordsPerPage;
+  const pageRecords=currentRecords.slice(start,start+recordsPerPage);
+  pageRecords.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${r.code}</td><td>${r.option}</td><td>${r.price.toLocaleString('es-CL',{style:'currency',currency:'CLP',minimumFractionDigits:0})}</td><td>${r.withdraw}</td><td><button class="deleteBtn" data-id="${r.id}">Eliminar</button></td>`;
+    tbody.appendChild(tr);
+    tr.querySelector('.deleteBtn').addEventListener('click',function(){ deleteRecord(this.getAttribute('data-id')); });
+  });
+  renderPagination();
+}
+
+function renderPagination(){
+  const pages=Math.ceil(currentRecords.length/recordsPerPage);
+  const div=document.getElementById('pagination');
+  div.innerHTML='';
+  if(currentPage>1) div.innerHTML+=`<button onclick="prevPage()">Anterior</button>`;
+  if(currentPage<pages) div.innerHTML+=`<button onclick="nextPage()">Siguiente</button>`;
+}
+
+function prevPage(){ currentPage--; showPage(); }
+function nextPage(){ currentPage++; showPage(); }
+
+function deleteRecord(id){
+  id=Number(id);
+  let records=JSON.parse(localStorage.getItem('orderRecords')||'[]');
+  records=records.filter(r=>r.id!==id);
+  localStorage.setItem('orderRecords', JSON.stringify(records));
+  renderRecords();
+}
+
+function searchRecords(){
+  const keyword=document.getElementById('searchInput').value.toLowerCase();
+  const records=JSON.parse(localStorage.getItem('orderRecords')||'[]');
+  currentRecords=records.filter(r=>r.code.toLowerCase().includes(keyword));
+  currentPage=1;
+  showPage();
+}
+
+function clearSearch(){ document.getElementById('searchInput').value=''; renderRecords(); }
+
+function closeModal(){ document.getElementById('modal').style.display='none'; }
+
+function updateTime(){
+  const now=new Date();
+  const d=String(now.getDate()).padStart(2,'0');
+  const m=String(now.getMonth()+1).padStart(2,'0');
+  const y=now.getFullYear();
+  const h=String(now.getHours()).padStart(2,'0');
+  const mi=String(now.getMinutes()).padStart(2,'0');
+  const s=String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('currentTime').innerText=`${d}/${m}/${y} ${h}:${mi}:${s}`;
+}
+setInterval(updateTime,1000);
+updateTime();
+loadData();
+renderRecords();
+
+document.getElementById('screenshotIcon').addEventListener('click',function(){
+  const icon=this;
+  icon.style.display='none';
+  const element=document.getElementById('pageContent');
+  const bg=window.getComputedStyle(document.body).background;
+  html2canvas(element,{scale:2,scrollY:-window.scrollY,useCORS:true,onclone:clonedDoc=>{clonedDoc.body.style.background=bg;}}).then(canvas=>{
+    const link=document.createElement('a');
+    link.download=`CPT_MARKETS_Captura_${Date.now()}.png`;
+    link.href=canvas.toDataURL();
+    link.click();
+    icon.style.display='inline';
+  });
+});
+</script>
+</body>
+</html>
