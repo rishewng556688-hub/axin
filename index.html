@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>CPT MARKETS Sistema – Plataforma de Tarefas Pré-pagas</title>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #6a0dad, #8a2be2, #dda0dd);
+  color: #ffffff;
+}
+#pageContent {
+  padding: 20px;
+  width: fit-content;
+  margin: auto;
+}
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+.top-left {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.top-left-input { display: flex; align-items: center; gap:8px; }
+.top-left-input input { width: 140px; padding: 6px; border-radius: 5px; border: 1px solid #ccc; text-align: center; background: #fff; color: #000; }
+.top-left-input svg { width: 20px; height: 20px; margin-right: 5px; fill: #ffffff; cursor: pointer; }
+#languageSelect{padding:6px;border-radius:5px;border:1px solid #ccc;background:#fff;color:#000}
+.top-right-time {
+  font-size: 16px; font-weight: bold;
+  background-color: rgba(128,0,128,0.3);
+  padding: 5px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3);
+}
+table { border-collapse: collapse; background-color: rgba(75,0,130,0.3); }
+th, td { border: 1px solid rgba(255,255,255,0.3); padding: 12px; text-align: center; }
+th { background-color: rgba(75,0,130,0.5); font-size:16px; font-weight:700; white-space:nowrap; }
+tr:nth-child(even) { background-color: rgba(138,43,226,0.1); }
+tr:hover { background-color: rgba(138,43,226,0.2); }
+button { padding: 8px 16px; background: linear-gradient(90deg, #6a0dad, #8a2be2); color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; transition: 0.3s; }
+button:hover { background: linear-gradient(90deg, #dda0dd, #8a2be2, #6a0dad); box-shadow: 0 0 15px rgba(138,43,226,0.7); }
+input[type="number"] { width: 90px; text-align: center; border-radius: 5px; border: 1px solid #ccc; background:#fff;color:#000; padding:4px; }
+input[type="text"].readonly { background:transparent;border:none;color:#fff;width:120px }
+.formula { color: #e0b0ff; font-weight: bold; margin: 5px 0; }
+p.note { color: #e0b0ff; margin-top: 10px; text-align: center; }
+
+/* 模态框 */
+#modal {
+  display: none;
+  position: absolute;
+  background: rgba(75,0,130,0.95);
+  color: #00ffff;
+  font-weight: bold;
+  text-align: center;
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: 2px solid #8a2be2;
+  z-index: 100;
+  min-width: 240px;
+  max-width: 90%;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  line-height: 1.3em;
+}
+#modal button { margin-top: 8px; padding: 5px 10px; border: none; border-radius: 5px; background: #8a2be2; color: #ffffff; cursor: pointer; font-size: 14px; }
+
+/* 订单记录 */
+#records { margin-top: 30px; width: fit-content; }
+#recordSearch { margin-bottom: 10px; display:flex; gap:8px; align-items:center; }
+#recordSearch input { width: 220px; padding: 6px; border-radius: 5px; border: 1px solid #ccc; background:#fff;color:#000 }
+#recordSearch button { padding: 6px 10px; margin-left: 0; }
+#recordTable { border-collapse: collapse; width: 100%; }
+#recordTable th, #recordTable td { border: 1px solid rgba(255,255,255,0.3); padding: 8px; text-align: center; background:transparent; color:inherit; }
+#recordTable th { background-color: rgba(75,0,130,0.5); font-size:16px; font-weight:700; }
+#recordTable tr:nth-child(even) { background-color: rgba(138,43,226,0.1); }
+#recordTable tr:hover { background-color: rgba(138,43,226,0.2); }
+#pagination button { margin: 3px; padding: 5px 10px; border-radius: 5px; border: none; cursor: pointer; background-color: #6a0dad; color: white; }
+
+/* 高亮样式（搜索结果） */
+.highlight { outline: 3px solid rgba(0,255,255,0.25); box-shadow: 0 0 12px rgba(0,255,255,0.08); }
+</style>
+</head>
+<body>
+<div id="pageContent">
+
+  <h2 style="text-align:center;" id="mainTitle">CPT MARKETS Sistema – Plataforma de Tarefas Pré-pagas</h2>
+
+  <div class="top-bar">
+    <div class="top-left">
+      <select id="languageSelect" aria-label="Select language">
+        <option value="pt-BR">🇧🇷 Português (BR)</option>
+        <option value="zh-CN">🇨🇳 中文</option>
+        <option value="en-US">🇺🇸 English</option>
+        <option value="es-ES">🇪🇸 Español (ES)</option>
+        <option value="es-CL">🇨🇱 Español (CL)</option>
+      </select>
+
+      <div class="top-left-input">
+        <svg id="screenshotIcon" viewBox="0 0 512 512" title="Screenshot" role="img" aria-hidden="true">
+          <path d="M505 442.7l-99.7-99.7c28.3-34.9 45.3-79.4 45.3-127.3C450.6 99.1 351.5 0 225.3 0S0 99.1 0 225.3 99.1 450.6 225.3 450.6c47.9 0 92.4-17 127.3-45.3l99.7 99.7c4.5 4.5 10.6 7 17 7s12.5-2.5 17-7c9.4-9.4 9.4-24.6 0-34zM225.3 400c-96.1 0-174.7-78.6-174.7-174.7S129.2 50.6 225.3 50.6 400 129.2 400 225.3 321.4 400 225.3 400z"/>
+        </svg>
+        <input type="text" placeholder="Código do pedido" id="topCodeInput" aria-label="Top order code">
+      </div>
+    </div>
+
+    <div class="top-right-time" id="currentTime" aria-live="polite"></div>
+  </div>
+
+  <table id="planTable" aria-label="Options table">
+    <thead>
+      <tr id="tableHeader">
+        <th>Nº</th><th>Opção</th><th>Preço (R$)</th><th>Comissão (%)</th><th>Comissão (R$)</th><th>Valor para Saque (R$)</th><th>Ação</th>
+      </tr>
+    </thead>
+    <tbody id="planBody">
+      <!-- JS will render rows -->
+    </tbody>
+  </table>
+
+  <p class="note" id="noteText">O sistema devolverá automaticamente o valor principal + comissão em 5 a 10 minutos.</p>
+
+  <div id="modal" role="dialog" aria-modal="true"><p id="modalMessage"></p><button onclick="closeModal()" id="modalBtn">OK</button></div>
+
+  <div id="records" aria-label="Order records">
+    <h3 id="recordTitle">Registros de Pedidos</h3>
+    <div id="recordSearch">
+      <input type="text" id="searchInput" placeholder="Pesquisar pedido por código" aria-label="Search orders">
+      <button onclick="searchRecords()" id="btnSearch">Pesquisar</button>
+      <button onclick="clearSearch()" id="btnClear">Limpar</button>
+    </div>
+
+    <table id="recordTable" aria-label="Records table">
+      <thead><tr id="recordHeader"><th>Código</th><th>Opção</th><th>Preço</th><th>Valor para Saque</th><th>Ação</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div id="pagination" aria-label="Pagination"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+/* -----------------------
+   Translations & config
+   ----------------------- */
+const translations = {
+  "pt-BR": {
+    mainTitle: "CPT MARKETS Sistema – Plataforma de Tarefas Pré-pagas",
+    codePlaceholder: "Código do pedido",
+    header: ["Nº","Opção","Preço (R$)","Comissão (%)","Comissão (R$)","Valor para Saque (R$)","Ação"],
+    options: ["Opção 1","Opção 2","Opção 3"],
+    selectText: "Selecionar",
+    note: "O sistema devolverá automaticamente o valor principal + comissão em 5 a 10 minutos.",
+    recordsTitle: "Registros de Pedidos",
+    searchPlaceholder: "Pesquisar pedido por código",
+    searchBtn: "Pesquisar",
+    clearBtn: "Limpar",
+    modalOk: "OK",
+    currency: "BRL",
+    locale: "pt-BR",
+    // formula function -> takes formatted price, percent (number), formatted commission, formatted withdraw
+    formula: (priceFmt, percent, commFmt, withdrawFmt) => `Preço ${priceFmt} + Comissão ${percent}% (${commFmt}) = Valor para Saque ${withdrawFmt}`,
+    selectedText: (opt, code, price, comPct, withdraw) =>
+      `Você selecionou a ${opt} (${code})\nPreço: ${price}, Comissão: ${comPct}%, Valor para saque: ${withdraw}`
+  },
+  "zh-CN": {
+    mainTitle: "CPT MARKETS 系统 – 预付任务平台",
+    codePlaceholder: "订单代码",
+    header: ["编号","选项","价格 (¥)","佣金 (%)","佣金 (¥)","提现金额 (¥)","操作"],
+    options: ["选项 1","选项 2","选项 3"],
+    selectText: "选择",
+    note: "系统将在5到10分钟内自动返还本金+佣金。",
+    recordsTitle: "订单记录",
+    searchPlaceholder: "按订单代码搜索",
+    searchBtn: "搜索",
+    clearBtn: "清除",
+    modalOk: "确定",
+    currency: "CNY",
+    locale: "zh-CN",
+    formula: (priceFmt, percent, commFmt, withdrawFmt) => `价格 ${priceFmt} + 佣金 ${percent}% (${commFmt}) = 提现金额 ${withdrawFmt}`,
+    selectedText: (opt, code, price, comPct, withdraw) =>
+      `你选择了 ${opt} (${code})\n价格：${price}，佣金：${comPct}%，提现金额：${withdraw}`
+  },
+  "en-US": {
+    mainTitle: "CPT MARKETS System – Prepaid Task Platform",
+    codePlaceholder: "Order Code",
+    header: ["No.","Option","Price ($)","Commission (%)","Commission ($)","Withdraw ($)","Action"],
+    options: ["Option 1","Option 2","Option 3"],
+    selectText: "Select",
+    note: "The system will automatically refund the principal + commission within 5–10 minutes.",
+    recordsTitle: "Order Records",
+    searchPlaceholder: "Search orders by code",
+    searchBtn: "Search",
+    clearBtn: "Clear",
+    modalOk: "OK",
+    currency: "USD",
+    locale: "en-US",
+    formula: (priceFmt, percent, commFmt, withdrawFmt) => `Price ${priceFmt} + Commission ${percent}% (${commFmt}) = Withdraw ${withdrawFmt}`,
+    selectedText: (opt, code, price, comPct, withdraw) =>
+      `You selected ${opt} (${code})\nPrice: ${price}, Commission: ${comPct}%, Withdraw: ${withdraw}`
+  },
+  "es-ES": {
+    mainTitle: "CPT MARKETS Sistema – Plataforma de Tareas Prepago",
+    codePlaceholder: "Código del pedido",
+    header: ["Nº","Opción","Precio (€)","Comisión (%)","Comisión (€)","Importe a Retirar (€)","Acción"],
+    options: ["Opción 1","Opción 2","Opción 3"],
+    selectText: "Seleccionar",
+    note: "El sistema reembolsará automáticamente el importe principal + comisión en 5–10 minutos.",
+    recordsTitle: "Registros de Pedidos",
+    searchPlaceholder: "Buscar pedido por código",
+    searchBtn: "Buscar",
+    clearBtn: "Limpiar",
+    modalOk: "Aceptar",
+    currency: "EUR",
+    locale: "es-ES",
+    formula: (priceFmt, percent, commFmt, withdrawFmt) => `Precio ${priceFmt} + Comisión ${percent}% (${commFmt}) = Importe a Retirar ${withdrawFmt}`,
+    selectedText: (opt, code, price, comPct, withdraw) =>
+      `Has seleccionado ${opt} (${code})\nPrecio: ${price}, Comisión: ${comPct}%, Importe a retirar: ${withdraw}`
+  },
+  "es-CL": {
+    mainTitle: "CPT MARKETS Sistema – Plataforma de Tarefas (CL)",
+    codePlaceholder: "Código del pedido",
+    header: ["Nº","Opción","Precio (CLP$)","Comisión (%)","Comisión (CLP$)","Monto a Retirar (CLP$)","Acción"],
+    options: ["Opción 1","Opción 2","Opción 3"],
+    selectText: "Seleccionar",
+    note: "El sistema devolverá automáticamente el monto principal + comisión en 5 a 10 minutos.",
+    recordsTitle: "Registros de Pedidos",
+    searchPlaceholder: "Buscar pedido por código",
+    searchBtn: "Buscar",
+    clearBtn: "Limpiar",
+    modalOk: "Aceptar",
+    currency: "CLP",
+    locale: "es-CL",
+    formula: (priceFmt, percent, commFmt, withdrawFmt) => `Precio ${priceFmt} + Comisión ${percent}% (${commFmt}) = Monto a Retirar ${withdrawFmt}`,
+    selectedText: (opt, code, price, comPct, withdraw) =>
+      `Has seleccionado ${opt} (${code})\nPrecio: ${price}, Comisión: ${comPct}%, Monto a retirar: ${withdraw}`
+  }
+};
+
+/* -----------------------
+   State & keys
+   ----------------------- */
+let currentLang = localStorage.getItem('selectedLang') || 'pt-BR';
+const dataKey = (k) => `${k}_${currentLang}`; // per-language storage keys
+let currentRecords = [], currentPage = 1, recordsPerPage = 3;
+
+/* -----------------------
+   Helpers
+   ----------------------- */
+function fmtNumber(num){
+  const cfg = translations[currentLang];
+  // CLP should show no decimals, others show no decimals too per previous behavior
+  const opts = { style: 'currency', currency: cfg.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 };
+  return new Intl.NumberFormat(cfg.locale, opts).format(num);
+}
+function fmtRaw(num){
+  const cfg = translations[currentLang];
+  return new Intl.NumberFormat(cfg.locale).format(num);
+}
+
+/* -----------------------
+   Render plan table (dynamic for language switching)
+   ----------------------- */
+function renderPlanTable(){
+  const t = translations[currentLang];
+  document.getElementById('mainTitle').innerText = t.mainTitle;
+  document.getElementById('topCodeInput').placeholder = t.codePlaceholder;
+
+  // build header
+  const headerRow = t.header.map(h => `<th>${h}</th>`).join('');
+  document.getElementById('tableHeader').innerHTML = headerRow;
+
+  // build body rows (3 options)
+  const body = [];
+  for(let i=1;i<=3;i++){
+    const opt = t.options[i-1];
+    body.push(`<tr data-option-row="${i}"><td>${i}</td><td>${opt}</td>
+      <td><input type="number" value="1000" oninput="updateRow(${i})" aria-label="price-${i}"></td>
+      <td><input type="number" value="40" oninput="updateRow(${i})" aria-label="percent-${i}"></td>
+      <td><input type="text" readonly class="readonly" aria-label="commission-${i}"></td>
+      <td id="withdraw${i}"></td>
+      <td><button onclick="selectOption(${i})">${t.selectText}</button></td></tr>
+      <tr><td colspan="7"><p class="formula" id="formula${i}"></p></td></tr>`);
+  }
+  document.getElementById('planBody').innerHTML = body.join('');
+  document.getElementById('noteText').innerText = translations[currentLang].note;
+
+  // reapply saved data (per-language)
+  loadData();
+  for(let i=1;i<=3;i++) updateRow(i);
+}
+
+/* -----------------------
+   Persistence of per-language plan data
+   ----------------------- */
+function saveData(id, price, percent){
+  const key = dataKey('paymiumData');
+  let d = JSON.parse(localStorage.getItem(key) || '{}');
+  d[id] = { price, percent };
+  localStorage.setItem(key, JSON.stringify(d));
+}
+function loadData(){
+  const key = dataKey('paymiumData');
+  let d = JSON.parse(localStorage.getItem(key) || '{}');
+  for(let i=1;i<=3;i++){
+    if(d[i]){
+      const priceInput = document.querySelector(`#planBody tr[data-option-row="${i}"] td:nth-child(3) input`);
+      const percentInput = document.querySelector(`#planBody tr[data-option-row="${i}"] td:nth-child(4) input`);
+      if(priceInput) priceInput.value = d[i].price;
+      if(percentInput) percentInput.value = d[i].percent;
+    }
+  }
+}
+
+/* -----------------------
+   Update row calculations (UPDATED: uses new formula format)
+   ----------------------- */
+function updateRow(id){
+  const row = document.querySelector(`#planBody tr[data-option-row="${id}"]`);
+  if(!row) return;
+  const priceInput = row.querySelector('td:nth-child(3) input');
+  const percentInput = row.querySelector('td:nth-child(4) input');
+  const commissionInput = row.querySelector('td:nth-child(5) input');
+  const price = Math.round(parseFloat(priceInput.value) || 0);
+  const percent = parseFloat(percentInput.value) || 0;
+  const commission = Math.round(price * percent / 100);
+  const withdraw = Math.round(price + commission);
+
+  // format with current language currency
+  const priceFmt = fmtNumber(price);
+  const commFmt = fmtNumber(commission);
+  const withdrawFmt = fmtNumber(withdraw);
+
+  commissionInput.value = commFmt;
+  document.getElementById(`withdraw${id}`).innerText = withdrawFmt;
+
+  // NEW: use translation-specific formula function for clear display
+  const t = translations[currentLang];
+  if(typeof t.formula === 'function'){
+    document.getElementById(`formula${id}`).innerText = t.formula(priceFmt, percent, commFmt, withdrawFmt);
+  } else {
+    document.getElementById(`formula${id}`).innerText = `${priceFmt} + ${percent}% = ${withdrawFmt}`;
+  }
+
+  saveData(id, price, percent);
+}
+
+/* -----------------------
+   Orders: save, render, pagination, delete
+   store price and percent (raw) to recompute per-language
+   ----------------------- */
+function addOrderRecord(code, option, price, percent){
+  const key = dataKey('orderRecords');
+  let arr = JSON.parse(localStorage.getItem(key) || '[]');
+  arr.unshift({ id: Date.now(), code, option, price, percent, ts: Date.now() });
+  localStorage.setItem(key, JSON.stringify(arr));
+  renderRecords();
+}
+function loadOrderRecords(){
+  const key = dataKey('orderRecords');
+  return JSON.parse(localStorage.getItem(key) || '[]');
+}
+
+function renderRecords(){
+  currentRecords = loadOrderRecords();
+  currentPage = 1;
+  showPage();
+}
+
+function showPage(){
+  const tbody = document.querySelector('#recordTable tbody');
+  tbody.innerHTML = '';
+  const t = translations[currentLang];
+  const start = (currentPage - 1) * recordsPerPage;
+  const pageRecords = currentRecords.slice(start, start + recordsPerPage);
+  pageRecords.forEach(r => {
+    const withdrawVal = Math.round(r.price + Math.round(r.price * (r.percent||0) / 100));
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.code}</td><td>${t.options[r.option-1] || r.option}</td><td>${fmtNumber(r.price)}</td><td>${fmtNumber(withdrawVal)}</td><td><button class="deleteBtn" data-id="${r.id}">${currentLang==='zh-CN'?'删除':(currentLang==='pt-BR'?'Excluir':'Eliminar')}</button></td>`;
+    tbody.appendChild(tr);
+    tr.querySelector('.deleteBtn').addEventListener('click', function(){ deleteRecord(Number(this.getAttribute('data-id'))); });
+  });
+  renderPagination();
+}
+
+function renderPagination(){
+  const pages = Math.max(1, Math.ceil(currentRecords.length / recordsPerPage));
+  const div = document.getElementById('pagination');
+  div.innerHTML = '';
+  if(currentPage > 1) div.innerHTML += `<button onclick="prevPage()">◀</button>`;
+  if(currentPage < pages) div.innerHTML += `<button onclick="nextPage()">▶</button>`;
+}
+
+function prevPage(){ if(currentPage>1){ currentPage--; showPage(); } }
+function nextPage(){ currentPage++; showPage(); }
+
+function deleteRecord(id){
+  const key = dataKey('orderRecords');
+  let arr = JSON.parse(localStorage.getItem(key) || '[]');
+  arr = arr.filter(x => x.id !== id);
+  localStorage.setItem(key, JSON.stringify(arr));
+  renderRecords();
+}
+
+/* -----------------------
+   Search / Clear (bottom search)
+   ----------------------- */
+function searchRecords(){
+  const keyword = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  const key = dataKey('orderRecords');
+  const all = JSON.parse(localStorage.getItem(key) || '[]');
+  if(!keyword){ currentRecords = all; } else {
+    currentRecords = all.filter(r => (r.code || '').toLowerCase().includes(keyword));
+  }
+  currentPage = 1;
+  showPage();
+  highlightRecordRow(keyword);
+}
+function clearSearch(){
+  document.getElementById('searchInput').value = '';
+  renderRecords();
+  removeHighlights();
+}
+
+function highlightRecordRow(keyword){
+  const rows = document.querySelectorAll('#recordTable tbody tr');
+  rows.forEach(r=>{
+    r.classList.remove('highlight');
+    if(!keyword) return;
+    if(r.innerText.toLowerCase().includes(keyword)) r.classList.add('highlight');
+  });
+}
+function removeHighlights(){
+  document.querySelectorAll('#recordTable tbody tr').forEach(r=>r.classList.remove('highlight'));
+}
+
+/* -----------------------
+   Modal: cover option2 row horizontally centered
+   Content localized and includes commission %
+   ----------------------- */
+function selectOption(id){
+  // read current values from selected row
+  const row = document.querySelector(`#planBody tr[data-option-row="${id}"]`);
+  if(!row) return;
+  const price = Math.round(parseFloat(row.querySelector('td:nth-child(3) input').value) || 0);
+  const percent = parseFloat(row.querySelector('td:nth-child(4) input').value) || 0;
+  const commission = Math.round(price * percent / 100);
+  const withdraw = Math.round(price + commission);
+  const withdrawFormatted = fmtNumber(withdraw);
+  const priceFormatted = fmtNumber(price);
+  const code = (document.getElementById('topCodeInput').value || (currentLang==='pt-BR' ? 'Sem código' : (currentLang==='zh-CN'?'无代码':'No Code')) );
+
+  // save record (store raw price and percent)
+  addOrderRecord(code, id, price, percent);
+
+  // prepare modal content localized
+  const t = translations[currentLang];
+  const optionLabel = t.options[id-1] || (`Option ${id}`);
+  const msg = t.selectedText(optionLabel, code, priceFormatted, percent, withdrawFormatted);
+
+  const modal = document.getElementById('modal');
+  const modalMessage = document.getElementById('modalMessage');
+  modalMessage.innerText = msg;
+  document.getElementById('modalBtn').innerText = t.modalOk;
+
+  // position modal to COVER option2 row horizontally centered
+  const option2Row = document.querySelector(`#planBody tr[data-option-row="2"]`);
+  if(option2Row){
+    // show to measure
+    modal.style.display = 'block';
+    modal.style.visibility = 'hidden';
+    // measure
+    const rect = option2Row.getBoundingClientRect();
+    // compute center point of the option2 row
+    const centerX = rect.left + window.scrollX + rect.width / 2;
+    const centerY = rect.top + window.scrollY + rect.height / 2;
+    // compute top-left to place modal such that modal is centered at centerX,centerY
+    const leftPos = Math.round(centerX - (modal.offsetWidth / 2));
+    const topPos = Math.round(centerY - (modal.offsetHeight / 2));
+    modal.style.left = `${leftPos}px`;
+    modal.style.top = `${topPos}px`;
+    modal.style.visibility = 'visible';
+  } else {
+    modal.style.left = `${window.scrollX + window.innerWidth/2 - modal.offsetWidth/2}px`;
+    modal.style.top = `${window.scrollY + window.innerHeight/2 - modal.offsetHeight/2}px`;
+    modal.style.display = 'block';
+  }
+}
+
+/* -----------------------
+   Close modal
+   ----------------------- */
+function closeModal(){
+  const modal = document.getElementById('modal');
+  modal.style.display = 'none';
+}
+
+/* -----------------------
+   Language switch: re-render UI strings & reformat numbers
+   ----------------------- */
+function applyLanguage(lang){
+  currentLang = lang;
+  localStorage.setItem('selectedLang', lang);
+
+  // update top UI strings
+  const t = translations[currentLang];
+  document.getElementById('mainTitle').innerText = t.mainTitle;
+  document.getElementById('topCodeInput').placeholder = t.codePlaceholder;
+  document.getElementById('recordTitle').innerText = t.recordsTitle;
+  document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+  document.getElementById('btnSearch').innerText = t.searchBtn;
+  document.getElementById('btnClear').innerText = t.clearBtn;
+  document.getElementById('noteText').innerText = t.note;
+  document.getElementById('modalBtn').innerText = t.modalOk;
+
+  // re-render plan table & values in the new locale
+  renderPlanTable();
+
+  // re-render records (recompute display values using raw price & percent)
+  currentRecords = loadOrderRecords();
+  renderRecords();
+}
+
+/* helper to get saved percent for option (from paymiumData) */
+function getSavedPercent(option){
+  const d = JSON.parse(localStorage.getItem(dataKey('paymiumData')) || '{}');
+  if(d && d[option] && typeof d[option].percent !== 'undefined') return d[option].percent;
+  return 0;
+}
+
+/* -----------------------
+   Top screenshot button (keeps original behavior)
+   ----------------------- */
+document.getElementById('screenshotIcon').addEventListener('click', function(){
+  const icon = this;
+  icon.style.display = 'none';
+  const element = document.getElementById('pageContent');
+  const bg = window.getComputedStyle(document.body).background;
+  html2canvas(element, { scale: 2, scrollY: -window.scrollY, useCORS: true, onclone: (clonedDoc) => { clonedDoc.body.style.background = bg; } }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = `CPT_MARKETS_Screenshot_${Date.now()}.png`;
+    link.href = canvas.toDataURL();
+    link.click();
+    icon.style.display = 'inline';
+  });
+});
+
+/* -----------------------
+   Time updater
+   ----------------------- */
+function updateTime(){
+  const now = new Date();
+  const d = String(now.getDate()).padStart(2,'0');
+  const m = String(now.getMonth()+1).padStart(2,'0');
+  const y = now.getFullYear();
+  const h = String(now.getHours()).padStart(2,'0');
+  const mi = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('currentTime').innerText = `${d}/${m}/${y} ${h}:${mi}:${s}`;
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+/* -----------------------
+   Hook up languageSelect and buttons
+   ----------------------- */
+document.getElementById('languageSelect').value = currentLang;
+document.getElementById('languageSelect').addEventListener('change', (e) => applyLanguage(e.target.value));
+
+document.getElementById('btnSearch').addEventListener('click', searchRecords);
+document.getElementById('btnClear').addEventListener('click', clearSearch);
+
+/* -----------------------
+   Initialize UI on load
+   ----------------------- */
+applyLanguage(currentLang);
+renderRecords();
+
+</script>
+</body>
+</html>
